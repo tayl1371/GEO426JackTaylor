@@ -1,301 +1,224 @@
-################################################################################
+###############################################################################
 # Author: Josh Vertalka
 # Date: 11-30-2023
-# Purpose: Lab 2 of Geography 426
-# This lab is going to provide a quick introduction in R and some
-# common exploratory data analysis that you may find helpful for your 
-# or course project. 
+# Purpose: Lab 2 of Geography 426 - Introduction to R and Exploratory Data Analysis
+###############################################################################
 
 # Objective: 
-# 1. Become familiar with common R functions and how to install and load libraries
-# 2. Learn some common exploratory data analysis (EDA) through R
-# 3. Become more familiar with spatial dimensions
-################################################################################
-# Welcome to R. R is a computation language. It allows us to better understand data, 
-# build maps, build models, animate data, and a bunch of other things. 
-# Today we are going to focus on the basics of bringing data in and understanding
-# how t
+# 1. Become familiar with common R functions and how to install and load libraries.
+# 2. Learn some common exploratory data analysis (EDA) techniques through R.
+# 3. Become more familiar with spatial dimensions and how to handle spatial data in R.
 
-#The first thing I want to tell you about is the pound or hashtag sign and it's 
-# utility in R. The # allows us to write comments in our script as a non-command
-# function. A command function is a function that we instruct the computer to 
-# execute. 
+# This script will guide you through the basics of R including how to manage packages,
+# load and explore data, and begin working with spatial data.
 
-# Creating a vector of package names for easier management.
-my_packages <- c("usdata", "tidyverse", "MASS", "maps", 
-                 "GGally", "ggplot2", "parallel")
-# Checking which packages are not installed and installing them.
-not_installed <- my_packages[!(my_packages %in% installed.packages()[ , "Package"])]
-if(length(not_installed)) install.packages(not_installed)
+# Install and load necessary packages
+# First, we define a vector of package names that the script requires. This includes libraries
+# for data manipulation, visualization, statistical analysis, and spatial data handling.
+packages_needed <- c("tidyverse", "MASS", "maps", "GGally", "ggplot2", "sf", "readr", "skimr")
 
-#If R asks if you want to restart before installation, please say yes. 
+# Identify which of the needed packages are not currently installed on your system.
+packages_to_install <- packages_needed[!packages_needed %in% installed.packages()[, "Package"]]
 
-library(usdata)       # Provides datasets related to the United States, useful for analysis and visualization
-library(tidyverse)    # A collection of R packages designed for data science, including data manipulation, plotting, and more
-library(MASS)         # Contains functions and datasets from the book "Modern Applied Statistics with S"; useful for statistical methods
-library(maps)         # Provides map databases and plotting tools, useful for creating geographical maps
+# Install any of the required packages that are missing. This step ensures that all
+# necessary libraries are available for use in the script.
+if (length(packages_to_install)) install.packages(packages_to_install)
 
-library(ggplot2)      # A system for declaratively creating graphics, based on The Grammar of Graphics
-library(GGally)       # Extends ggplot2 for easy creation of complex multi-plot layouts
-library(parallel)     # Provides support for parallel computation, including parallel versions of apply functions
+# Load the libraries required for data manipulation, visualization, and analysis.
+# Each library has a specific role, e.g., tidyverse for data science operations,
+# sf for spatial data, ggplot2 for plotting, etc.
+library(tidyverse)
+library(MASS)
+library(maps)
+library(sf)
+library(GGally)
+library(readr)
+library(skimr)
 
+# Set the working directory to the location of your data files.
+# Uncomment and adjust the path as necessary.
+# setwd("path_to_your_directory")
 
+# Load data using read_csv from the readr package. Replace the placeholder path with
+# the actual location of your data file. read_csv is part of the tidyverse and is
+# optimized for fast and easy data loading.
+data <- read_csv("/Users/jacktaylor/Documents/College/Senior/Semester II/GEO 426/GEO426JackTaylor/Lab 2/Lab 2 Data.csv")
 
+###############################################################################
+# Exploratory Data Analysis (EDA)
+###############################################################################
 
-################################################################################
-################################################################################
-############################ Loading Data ######################################
-################################################################################
-################################################################################
-#First let's bring some data into our environment.
-data<-read.csv("C:/Users/joshu/OneDrive/Documents/Geog 426/Vertalka_Material/Labs/Lab 2/Lab 2 Data.csv")
+# EDA is crucial for understanding the underlying patterns and structures of the data.
+# It involves summary statistics, data structure exploration, and initial visualization.
 
+# Use glimpse() to get a compact, informative display of the data structure.
+# This function provides a quick overview of the data, showing types and first few values of each column.
+glimpse(data)
 
-################################################################################
-################################################################################
-###################### Exploring the Data ######################################
-################################################################################
-################################################################################
-
-# 1. Summary Statistics: Provides a summary for each column in the data frame.
+# Generating summary statistics for each column to understand the data better.
+# summary() provides descriptive statistics that summarize the central tendency,
+# dispersion, and shape of the dataset's distribution, excluding NaN values.
 summary(data)
 
-# 2. Structure: Displays the structure of the data frame including data types of each column.
-str(data)
+# Print the dimensions of the data frame to understand its size.
+# Understanding the size helps in assessing the scope of data analysis and visualization tasks.
+cat("Dimensions: ", dim(data), "\n")
 
-# 3. Dimensions: Returns the number of rows and columns in the data frame.
-dim(data)
+# Print the names of all columns to understand the variables available.
+# This helps in selecting which variables to focus on in the analysis.
+cat("Column Names: ", names(data), "\n")
 
-# 4. Column Names: Retrieves the names of all columns in the data frame.
-names(data)
+# Calculate and print the count of missing values for each column.
+# Handling missing values is a critical step in data cleaning.
+na_counts <- sapply(data, function(x) sum(is.na(x)))
+cat("Missing Values: ", na_counts, "\n")
 
-# 5. Head and Tail: Shows the first and last 6 rows of the data frame.
-head(data)
-tail(data)
+# Provide a summary of a specific variable to understand its distribution.
+# This example focuses on 'per_capita_income', but the variable can be changed as needed.
+cat("Summary of Per Capita Income: ", summary(data$per_capita_income), "\n")
 
-# 6. Missing Values: Checks for missing (NA) values in the data frame.
-sapply(data, function(x) sum(is.na(x)))
-
-
-#Let's focus on a particular variable. Let's look at per_capita_income. 
-#we can select that variable using calling the data object and using the
-# '$' sign followed by the variable name. 
-data$per_capita_income
-
-################################################################################
-################################################################################
-##################### Measures of Centrality ###################################
-################################################################################
-################################################################################
-
-#We can follow that up with some statistics of that data field by using 'summary' function
-summary(data$per_capita_income)
-
-
-#We can look at measures of centrality as well
-mean_value <- mean(data$per_capita_income)
-median_value <- median(data$per_capita_income)
-variance_value <- var(data$per_capita_income)
-sd_value <- sd(data$per_capita_income)
-
-
-#Important: if you want to explore a function in more depth you can use the '?'
-#Here's an example:
-
-?mean
-
-# the '?' will open up hte help screen and provide an overview of the function.
-# you can do this with any function: 
-
-?summary
-
-#Notice that all of the values are NA, we need to remove NAs from our data.
-#Now this will populate the different objects
+# Calculate and print basic statistical measures for 'per_capita_income', handling NAs.
+# These measures provide insights into the central tendency and variability of the variable.
 mean_value <- mean(data$per_capita_income, na.rm = TRUE)
 median_value <- median(data$per_capita_income, na.rm = TRUE)
 variance_value <- var(data$per_capita_income, na.rm = TRUE)
 sd_value <- sd(data$per_capita_income, na.rm = TRUE)
 
-#These summary statistics are helpful but they don't give us an understanding 
-# of the shape of the data. We can look at the shape of the data through many different ways. 
+# Task 1: Print out the calculated statistical measures for per capita income.
+cat("The mean Per Capita Income ($) is:", mean_value, "\n")
+cat("The median Per Capita Income ($) is:", median_value, "\n")
+cat("The variance of the Per Capita Income ($) is:", variance_value, "\n")
+cat("The standard deviation of the Per Capita Income ($) is:", sd_value, "\n")
 
-#One way we can look at the shape of data is through a histogram
+# Task 2: Perform the above measures on another variable of choice within the data
+# and print their values. Replace 'your_variable_here' with your selected variable.
+# Example for 'unemployment_rate':
+mean_unemployment <- mean(data$unemployment_rate, na.rm = TRUE)
+
+# Continue with mean, median, variance, and standard deviation calculations for your selected variable.
+cat("The mean Unemployment Rate is:", mean_unemployment, "\n")
+cat("The median Unemployment Rate is:", median(data$unemployment_rate, na.rm = TRUE), "\n")
+cat("The variance of Unemployment Rate is:", var(data$unemployment_rate, na.rm = TRUE), "\n")
+cat("The standard deviation of Unemployment Rate is:", sd(data$unemployment_rate, na.rm = TRUE), "\n")
+
+###############################################################################
+# Data Visualization with ggplot2
+###############################################################################
+
+# Visualizing data helps in understanding its distribution and identifying patterns or outliers.
+
+# Histogram: Visualizing the distribution of 'per_capita_income'.
+# Histograms are useful for showing the distribution and density of data points.
 hist(data$per_capita_income, main="Histogram of Per Capita Income", xlab="Per Capita Income")
 
-#another way is through a boxplot
+# Boxplot: Identifying outliers in 'per_capita_income'.
+# Boxplots are excellent for visualizing the spread and identifying outliers.
 boxplot(data$per_capita_income, main="Boxplot of Per Capita Income", ylab="Per Capita Income")
 
-#The shape of the data looks pretty good. We can see a normal, bell-shaped curve to the data. 
-#The boxplot identified some outliers that we'll want to be mindful of for mapping. 
-
-#Let's see if we can find a more skewed variable. 
+# Exploring other variables for distribution and skewness through histograms.
+# This helps in understanding the shape of different variables in the dataset.
 hist(data$median_hh_income, main="Histogram of Median Household Income", xlab="Median Household Income")
-#This does not look too skewed. Let's try another variable. 
+hist(data$unemployment_rate, main="Histogram of Unemployment Rate", xlab="Unemployment Rate", )
 
-hist(data$unemployment_rate, main="Histogram of Unemployment Rate", xlab="Unemployment Rate")
-#Unemployment rate looks pretty skewed. 
+# Adjusting histogram bins to better understand the distribution.
+# The number of bins can significantly affect the interpretation of a histogram.
+num_bins <- ceiling(sqrt(length(data$unemployment_rate)))
+breaks <- seq(from = min(data$unemployment_rate, na.rm = TRUE), to = max(data$unemployment_rate, na.rm = TRUE), length.out = num_bins + 1)
+hist(data$unemployment_rate, breaks = breaks, main = "Histogram of Unemployment Rate", xlab = "Unemployment Rate", ylab = "Frequency")
 
-#we can also supply different break points for the histogram:
-# Determine the number of bins for the frequency table
-# Common practice is to use the square root of the number of observations
-num_bins <- sqrt(length(data$unemployment_rate))
-num_bins <- ceiling(num_bins)  # Round up to the nearest whole number
+# The adjusted histogram provides a clearer view of how data is skewed.
 
-# Create the grouped-frequency table
-breaks <- seq(from = min(data$unemployment_rate, na.rm = TRUE), 
-              to = max(data$unemployment_rate, na.rm = TRUE), 
-              length.out = num_bins + 1)
-grouped_income <- cut(data$unemployment_rate, breaks = breaks, include.lowest = TRUE)
-frequency_table <- table(grouped_income)
+###############################################################################
+# Spatial Data Handling
+###############################################################################
 
-# Create a histogram
-hist(data$unemployment_rate, breaks = breaks, main = "Histogram of Per Capita Income", xlab = "Income Bins", ylab = "Frequency")
+# Handling spatial data involves creating and manipulating spatial features like points, lines, and polygons.
 
-#changing the breaks we really see how skewed the data is
+# POINT representation: Creating a simple feature (sf) object for points.
+points <- st_as_sf(data.frame(id = 1:2, x = c(-99.74, -99.75), y = c(32.45, 32.46)), coords = c("x", "y"), crs = 4326)
 
-
-# Create a boxplot (dispersion graph)
-boxplot(data$unemployment_rate, main = "Dispersion Graph for Per Capita Income", ylab = "Income")
-
-
-
-################################################################################
-################################################################################
-####################### Data Transformations ###################################
-################################################################################
-################################################################################
-
-# Original data histogram
-hist(data$unemployment_rate, main="Original Unemployment Rate", xlab="Unemployment Rate")
-
-# Log Transformation
-# Adding a small constant to avoid log(0)
-log_unemployment_rate <- log(data$unemployment_rate + 1)
-hist(log_unemployment_rate, main="Log Transformed Unemployment Rate", xlab="Log(Unemployment Rate + 1)")
-
-# Square Root Transformation
-sqrt_unemployment_rate <- sqrt(data$unemployment_rate)
-hist(sqrt_unemployment_rate, main="Square Root Transformed Unemployment Rate", xlab="Sqrt(Unemployment Rate)")
-
-# Inverse Transformation
-# Adding a small constant to avoid division by zero
-inverse_unemployment_rate <- 1 / (data$unemployment_rate + 1)
-hist(inverse_unemployment_rate, main="Inverse Transformed Unemployment Rate", xlab="1/(Unemployment Rate + 1)")
-
-# Box-Cox Transformation
-# The 'boxcox' function requires a model formula, so we use unemployment_rate ~ 1
-bc_transform <- boxcox(unemployment_rate ~ 1, data = data)
-# Find the optimal lambda value
-lambda_optimal <- bc_transform$x[which.max(bc_transform$y)]
-# Apply the Box-Cox transformation using the optimal lambda
-boxcox_unemployment_rate <- ((data$unemployment_rate^lambda_optimal) - 1) / lambda_optimal
-hist(boxcox_unemployment_rate, main="Box-Cox Transformed Unemployment Rate", xlab="Box-Cox(Unemployment Rate)")
-
-# Cube Root Transformation
-cbrt_unemployment_rate <- (data$unemployment_rate)^(1/3)
-hist(cbrt_unemployment_rate, main="Cube Root Transformed Unemployment Rate", xlab="Cube Root(Unemployment Rate)")
-
-# When using log transformation, adding 1 is common to handle values of zero, since log(0) is undefined.
-# Box-Cox transformation seeks a value of λ to best normalize the data. If λ = 0, it's essentially a log 
-# transformation.
-# It's important to check the distribution after transformation, and sometimes none of these 
-# transformations will result in perfectly normal data, especially if the original data is not 
-# transformable to normality.
-
-################################################################################
-################################################################################
-###################### Correlation and Regressions #############################
-################################################################################
-################################################################################
-
-#Computes the correlation coefficient between per_capita_income and unemployment_rate, 
-#which quantifies the strength and direction of their linear relationship.
-#Fits a linear regression model predicting unemployment_rate from per_capita_income.
-#Summarizes the model to include coefficients that show the estimated relationship 
-#and the R-squared value that explains the proportion of variance in the unemployment_rate 
-#that can be predicted from per_capita_income.
-#Plots the data points and adds a regression line to visually assess the fit.
-
-# Calculate the correlation coefficient
-cor_coef <- cor(data$per_capita_income, data$unemployment_rate, use = "complete.obs")
-
-# Interpretation of the correlation coefficient
-# cor_coef close to 1 indicates a strong positive relationship
-# cor_coef close to -1 indicates a strong negative relationship
-# cor_coef around 0 indicates no linear relationship
-
-# Linear Regression Model
-# Fit a model where we predict unemployment rate based on per capita income
-lm_model <- lm(data$unemployment_rate ~ data$per_capita_income)
-
-# Summary of the model to get details like coefficients and R-squared value
-model_summary <- summary(lm_model)
-
-# Plot the data and add the regression line
-plot(data$per_capita_income, data$unemployment_rate, main="Regression Line",
-     xlab="Per Capita Income", ylab="Unemployment Rate", pch=19, col=c("blue", "black"))
-abline(lm_model, col="red") # Adds the regression line
-
-# Output the results
-list(correlation_coefficient = cor_coef, regression_summary = model_summary)
-
-
-################################################################################################################################################################
-################################################################################################################################################################
-
-
-
-################################################################################
-################################################################################
-########################### Spatial Dimensions #################################
-################################################################################
-################################################################################
-
-# POINT representation
-# Let's create a simple feature object for points
-points <- st_as_sf(data.frame(
-  id = 1:2,
-  x = c(-99.74, -99.75),
-  y = c(32.45, 32.46)
-), coords = c("x", "y"), crs = 4326)
-
-# LINE representation
-# Create a simple feature object for lines
-
-# Assuming line_data is already loaded
-line_data <- data.frame(
-  id = c(1, 1), # Same id to indicate these points are part of the same line
-  x = c(-99.74, -99.75),
-  y = c(32.45, 32.46)
-)
-
-# Convert to sf object
+# LINE representation: Converting a dataframe to a simple feature (sf) object and aggregating points to form lines.
+line_data <- data.frame(id = c(1, 1), x = c(-99.74, -99.75), y = c(32.45, 32.46))
 line_sf <- st_as_sf(line_data, coords = c("x", "y"), crs = 4326)
+line_sf_line <- line_sf %>% group_by(id) %>% summarise(geometry = st_combine(geometry)) %>% st_cast("LINESTRING")
 
-# Aggregate points by 'id' and cast to LINESTRING
-line_sf_line <- line_sf %>%
-  group_by(id) %>%
-  summarise(geometry = st_combine(geometry)) %>%
-  st_cast("LINESTRING")
-
-
-# AREAL (Polygon) representation
-# Create a simple feature object for polygons
-coords <- matrix(
-  c(-99.74, 32.45,  # First point
-    -99.75, 32.45,  # Second point
-    -99.75, 32.46,  # Third point
-    -99.74, 32.46,  # Fourth point
-    -99.74, 32.45), # Closing point (same as first to close the polygon)
-  byrow = TRUE, ncol = 2
-)
-# Create a POLYGON object
+# AREAL (Polygon) representation: Creating a simple feature (sf) object for polygons.
+coords <- matrix(c(-99.74, 32.45, -99.75, 32.45, -99.75, 32.46, -99.74, 32.46, -99.74, 32.45), byrow = TRUE, ncol = 2)
 poly <- st_polygon(list(coords))
-# Create an sf object
 polygon_sf <- st_sf(geometry = st_sfc(poly), crs = 4326)
 
-# Plot the points, lines, and polygons
+# Plotting points, lines, and polygons to visualize spatial features.
 plot(st_geometry(points), col = 'blue', pch = 19)
 plot(st_geometry(line_sf_line), col = 'red')
 plot(polygon_sf, col = 'green')
+
+
+
+
+#####################
+# QUESTIONS
+#####################
+# 1. The mean Per Capita Income in the United States is $26093.12.
+# 2. Altering the number of bins lets you see the spread of the data in a finer 
+#    view and lets you see get a better view of the outlier data. It can also 
+#    let you condense the spread of the data into a less fine view, potentially 
+#    giving you a smoother looking distribution.
+# 3. A histogram gives you a good view of how the data is distributed over the 
+#    whole range while a boxplot highlights the outliers and shows range of the 
+#    data excluding the outliers.
+# 4. The most effective transformation for normalizing the Unemployment rate 
+#    would be to use log10.
+hist(log10(data$unemployment_rate), main="Histogram of Unemployment Rate", 
+     xlab="Unemployment Rate", )
+# 5. A single or small number of trees would be best represented as points 
+#    while a large number of trees/a forest would be represented as a polygon.
+
+
+#####################
+# MY CODE
+#####################
+# 1. 
+cat("The mean Poverty Rate is:", mean(data$poverty, na.rm = TRUE), "\n")
+cat("The median Poverty Rate is:", median(data$poverty, na.rm = TRUE), "\n")
+cat("The variance of Poverty Rate is:", var(data$poverty, na.rm = TRUE), "\n")
+
+# 2. 
+boxplot(data$poverty, main="Boxplot of Poverty Rate", ylab="Poverty Rate")
+
+# 3. Poverty rate is positivley skewed. You can tell because of the very 
+#    large number of outliers highlighted by the boxplot and the long left tail 
+#    on the histogram.
+num_bins <- ceiling(sqrt(length(data$poverty)))
+breaks <- seq(from = min(data$poverty, na.rm = TRUE), 
+              to = max(data$poverty, na.rm = TRUE), length.out = num_bins + 1)
+hist(data$poverty, breaks = breaks, main = "Histogram of Poverty Rate", 
+     xlab = "Poverty Rate", ylab = "Frequency")
+
+# 4. 
+points <- st_as_sf(data.frame(id = 1:3, x = c(-99.74, -99.75, -99.63), 
+                                 y = c(32.45, 32.46, 32.67)), 
+                      coords = c("x", "y"), crs = 4326)
+plot(st_geometry(points), col = 'black', pch = 19)
+
+line_data <- data.frame(id = c(1, 1), x = c(99.75, -99.63), 
+                        y = c(32.46, 59.67))
+line_sf <- st_as_sf(line_data, coords = c("x", "y"), crs = 4326)
+line_sf_line <- line_sf %>% group_by(id) %>% 
+  summarise(geometry = st_combine(geometry)) %>% st_cast("LINESTRING")
+plot(st_geometry(line_sf_line), col = 'blue')
+
+coords <- matrix(c(-99.74, 32.45, -99.745, 32.4, -99.75, 32.45, 
+                   -99.75, 32.46, -99.74, 32.46, -99.74, 32.45), 
+                 byrow = TRUE, ncol = 2)
+poly <- st_polygon(list(coords))
+polygon_sf <- st_sf(geometry = st_sfc(poly), crs = 4326)
+plot(polygon_sf, col = 'red')
+
+
+# 5. 
+points <- st_as_sf(data.frame(id = 1:5, x = c(-99.74, -99.75, 
+                                              -99.66, -99.70, -99.72), 
+                              y = c(32.45, 32.46, 32.41, 32.56, 32.50)), 
+                   coords = c("x", "y"), crs = 4326)
+plot(st_geometry(points), col = 'black', pch = 19)
 
