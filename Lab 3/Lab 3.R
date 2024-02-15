@@ -570,6 +570,20 @@ choroLayer(x = mi_counties, var = "relRisk",
            legend.title.txt = "2022 Marriage \nRelative Risk: \nDivergent, 7 Colors")
 
 #####################
+# QUESTIONS
+#####################
+#1. The sf library is used for more simple operations while the terra library is 
+#   used for more complex operations.
+#2.	St_buffer creates a buffer around the feature, st_intersects determines
+#   if a feature is within a buffer, and st_set_crs which lets you set the 
+#   coordinate reference system.
+#3. You could sfheaders::sfg_linestring(obj = line_matrix) and you could use 
+#   sfheaders::sfg_polygon(obj = poly_dataframe).
+#4. You would use subset suing shapefile[shapefile$filter param]).
+#5. You could represent areas of high and low temperature by turning the 
+#   temperature into a raster layer and plotting it with a custom color palette.
+
+#####################
 # MY CODE
 #####################
 # 1. 
